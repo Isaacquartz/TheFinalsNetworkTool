@@ -217,7 +217,16 @@ async function toggleSession() {
             initChart();
             document.getElementById('tracertOutput').innerText = "Traceroute running...";
             document.getElementById('liveNotesInput').value = '';
-            document.getElementById('geoTag').style.display = 'none';
+            const ipOnly = ip.split(':')[0];
+            fetch(`/api/geo/${ipOnly}`)
+                .then(r => r.json())
+                .then(geoData => {
+                    if (geoData.status === 'success') {
+                        const tag = document.getElementById('geoTag');
+                        tag.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1.2em;">location_on</span> ${geoData.city}, ${geoData.countryCode} (${geoData.isp})`;
+                        tag.style.display = 'flex';
+                    }
+                }).catch(() => {});
             liveInterval = setInterval(fetchLiveData, 1000);
         } else {
             alert(data.message);
@@ -358,6 +367,21 @@ function renderHistoryList() {
 function renderHistoryChart(session) {
     document.getElementById('historyViewIp').innerText = session.ip;
     document.getElementById('historyViewTime').innerText = session.timestamp;
+    
+    const geoTag = document.getElementById('historyGeoTag');
+    geoTag.style.display = 'none';
+    if (session.ip) {
+        const ipOnly = session.ip.split(':')[0];
+        fetch(`/api/geo/${ipOnly}`)
+            .then(r => r.json())
+            .then(geoData => {
+                if (geoData.status === 'success') {
+                    geoTag.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1.1em; vertical-align: middle;">location_on</span> ${geoData.city}, ${geoData.countryCode} (${geoData.isp})`;
+                    geoTag.style.display = 'inline-flex';
+                    geoTag.style.alignItems = 'center';
+                }
+            }).catch(() => {});
+    }
     
     activeHistorySessionId = session.id;
     activeHistoryPointNotes = session.point_notes || {};
