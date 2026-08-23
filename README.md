@@ -45,7 +45,7 @@ Tired of wondering if that lag spike was your internet or the game server? This 
 ## ⚠️ Limitations
 - **Windows Target:** The auto-detect feature relies on Windows-specific connection mapping to sidestep Easy Anti-Cheat memory blocks without getting flagged.
 - **Admin Rights:** Depending on your Windows security configuration, `psutil` might require you to run the Python script as Administrator to read active network tables.
-- **Game Specific:** The tool currently targets `discovery.exe` (The Finals executable). 
+- **Game Specific:** The tool currently targets any executable starting with `discovery` and ending with `.exe` (e.g., `discovery.exe`, `discovery-d.exe`). 
 
 ## 🗺️ Roadmap Ideas
 - [ ] **3D Globe Visualization:** Plot traceroute hops on an interactive 3D globe or map instead of raw text output.
