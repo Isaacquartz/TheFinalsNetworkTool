@@ -34,9 +34,14 @@ Tired of wondering if that lag spike was your internet or the game server? This 
    ```bash
    pip install flask psutil maxminddb
    ```
-   *(Note: You will need a `GeoLite2-City.mmdb` file in the root directory for the Geo-IP feature to function).*
+   
+4. **Setup Geo-IP Database (Optional):**
+   To enable the geographical location lookups for game servers, you need the free MaxMind GeoLite2 database:
+   - Sign up for a free account at [MaxMind](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data).
+   - Download the **GeoLite2 City** database (`.mmdb` format).
+   - Extract and place the `GeoLite2-City.mmdb` file directly in the root folder of this project.
 
-4. **Run the App:**
+5. **Run the App:**
    ```bash
    python app.py
    ```
