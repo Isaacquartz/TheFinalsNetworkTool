@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+database.db
+data.json
+test_api.py
+test_detect.py
+.DS_Store
+*.mmdb
+*.bak
+*.log

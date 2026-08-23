@@ -1,0 +1,494 @@
+:root {
+    --bg-color: #0b0b0b;
+    --panel-bg: rgba(20, 20, 20, 0.8);
+    --yellow: #FFF100; /* The Finals Yellow */
+    --red: #FF003C;    /* The Finals Red */
+    --black: #000000;
+    --text-color: #f0f0f0;
+    --border-radius: 8px;
+    --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    background-image: radial-gradient(circle at top right, rgba(255, 241, 0, 0.1), transparent 40%),
+                      radial-gradient(circle at bottom left, rgba(255, 0, 60, 0.1), transparent 40%);
+    background-attachment: fixed;
+}
+
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--yellow);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.yellow-text {
+    color: var(--yellow);
+    text-shadow: 0 0 10px rgba(255, 241, 0, 0.5);
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    padding: 10px 20px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn.active {
+    background: var(--yellow);
+    color: var(--black);
+    border-color: var(--yellow);
+}
+
+.glass-panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.controls-panel {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end; /* Align bottoms */
+    flex-wrap: wrap;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+    padding-bottom: 24px; /* Room for status text below */
+}
+
+.input-group label {
+    font-weight: bold;
+    color: var(--yellow);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.ip-row {
+    display: flex;
+    gap: 10px;
+    height: 44px; /* Fixed height for exact alignment */
+}
+
+input[type="text"], select {
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    border-radius: 4px;
+    font-family: inherit;
+    flex: 1;
+    height: 44px;
+}
+
+input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--yellow);
+}
+
+.btn {
+    padding: 0 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-group {
+    display: flex;
+    height: 44px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.interval-btn {
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-right: 1px solid rgba(255,255,255,0.2);
+    flex: 1;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    transition: all 0.2s;
+    height: 100%;
+}
+.interval-btn:last-child {
+    border-right: none;
+}
+.interval-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
+.interval-btn.active {
+    background: var(--yellow);
+    color: var(--black);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background: var(--yellow);
+    color: var(--black);
+    box-shadow: 0 0 15px rgba(255, 241, 0, 0.4);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 25px rgba(255, 241, 0, 0.6);
+}
+
+.btn-danger {
+    background: var(--red);
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 0 25px rgba(255, 0, 60, 0.6);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--yellow);
+    border: 1px solid var(--yellow);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 241, 0, 0.1);
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-left: 4px solid var(--yellow);
+    border-radius: 4px;
+    padding: 15px 20px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transform: translateX(120%);
+    animation: slideIn 0.3s forwards;
+    min-width: 250px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.toast.error {
+    border-left-color: var(--red);
+}
+.toast.success {
+    border-left-color: #00ff00;
+}
+
+.toast.hiding {
+    animation: slideOut 0.3s forwards;
+}
+
+@keyframes slideIn {
+    to { transform: translateX(0); }
+}
+
+@keyframes slideOut {
+    to { transform: translateX(120%); opacity: 0; }
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}
+
+h2 {
+    margin-top: 0;
+    color: var(--yellow);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+}
+
+pre {
+    background: rgba(0,0,0,0.8);
+    padding: 15px;
+    border-radius: 4px;
+    color: #00A8FF; /* CNS Blue */
+    font-family: 'Consolas', monospace;
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+    text-shadow: 0 0 5px rgba(0, 168, 255, 0.4);
+}
+
+.session-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0 0;
+}
+
+.session-list li {
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--yellow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.session-list li:hover {
+    background: rgba(255,241,0,0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--yellow);
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: white;
+}
+
+.tracert-visual {
+    display: flex;
+    overflow-x: auto;
+    padding: 20px 0;
+    align-items: flex-start;
+}
+
+
+
+.hop-container {
+    display: flex;
+    align-items: flex-start;
+}
+
+.hop-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px; /* Changed from fixed 80px to allow text to breathe */
+    padding: 0 10px;
+}
+
+.hop-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--yellow);
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 2;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.hop-line {
+    flex-grow: 1;
+    min-width: 30px;
+    height: 2px;
+    background: transparent;
+    border-top: 2px dashed rgba(255, 241, 0, 0.4);
+    margin-top: 17px; /* Aligns with middle of 36px circle */
+    margin-left: -15px;
+    margin-right: -15px;
+    z-index: 1;
+}
+
+.hop-info {
+    font-size: 0.7rem;
+    text-align: center;
+    margin-top: 10px;
+    color: #ccc;
+    word-wrap: break-word;
+    width: 100%;
+}
+
+.hop-timeout .hop-circle {
+    background: var(--red);
+    color: white;
+}
+
+/* -----------------------------
+   LIGHT MODE overrides
+   ----------------------------- */
+body.light-mode {
+    --bg-color: #f2f2f2;
+    --panel-bg: rgba(255, 255, 255, 0.85);
+    --text-color: #1a1a1a;
+    --black: #ffffff;
+    background-image: radial-gradient(circle at top right, rgba(255, 241, 0, 0.3), transparent 40%),
+                      radial-gradient(circle at bottom left, rgba(255, 0, 60, 0.2), transparent 40%);
+}
+
+body.light-mode .glass-panel {
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+body.light-mode input[type="text"], body.light-mode select {
+    background: rgba(255,255,255,0.9);
+    color: #111;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+body.light-mode .button-group {
+    border-color: rgba(0,0,0,0.2);
+}
+
+body.light-mode .interval-btn {
+    background: rgba(255,255,255,0.9);
+    color: #111;
+    border-right-color: rgba(0,0,0,0.2);
+}
+
+body.light-mode .interval-btn:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+body.light-mode .interval-btn.active {
+    background: var(--yellow);
+    color: #000;
+}
+
+body.light-mode h2 {
+    color: #000;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+body.light-mode pre {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+}
+
+body.light-mode .session-list li {
+    background: rgba(255,255,255,0.9);
+    border-left-color: var(--yellow);
+    color: #111;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+body.light-mode .session-list li:hover {
+    background: rgba(255,241,0,0.2);
+}
+
+body.light-mode .stat-card {
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+body.light-mode .stat-label {
+    color: #555;
+}
+
+body.light-mode .stat-value {
+    color: #111;
+}
+
+body.light-mode .tab-btn {
+    color: #555;
+    border-color: #ccc;
+}
+
+body.light-mode .tab-btn.active {
+    background: var(--yellow);
+    color: #000;
+    border-color: var(--yellow);
+}
+
+body.light-mode .hop-line {
+    border-top: 2px dashed rgba(0, 0, 0, 0.2);
+}
