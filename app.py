@@ -82,7 +82,8 @@ def detect_game_ip():
         
     try:
         udp_candidates = []
-        tcp_candidates = []
+        game_port_candidates = []
+        cluster_candidates = []
         
         for c in psutil.net_connections(kind='inet'):
             if c.pid in game_pids and c.raddr:
@@ -97,21 +98,30 @@ def detect_game_ip():
                 if is_cloudflare(ip):
                     continue
                 
-                # Exclude web, HTTPS, and privileged ports <= 1024
-                # Live game match servers NEVER run on HTTP/HTTPS ports!
-                if is_web_port(port) or port <= 1024:
+                # Exclude plain HTTP
+                if port == 80:
                     continue
-                        
-                if c.type == socket.SOCK_DGRAM:
-                    udp_candidates.append(f"{ip}:{port}")
-                elif c.status == 'ESTABLISHED':
-                    tcp_candidates.append(f"{ip}:{port}")
+                
+                # 1. Dedicated game ports (> 1024 and not 443)
+                if port > 1024 and port != 443:
+                    if c.type == socket.SOCK_DGRAM:
+                        udp_candidates.append(f"{ip}:{port}")
+                    elif c.status == 'ESTABLISHED':
+                        game_port_candidates.append(f"{ip}:{port}")
+                elif port == 443 and c.status == 'ESTABLISHED':
+                    # 2. Cloud match cluster connection (e.g. Google Cloud / AWS game cluster)
+                    cluster_candidates.append(f"{ip}:{port}")
                     
-        # Always prioritize UDP game server traffic
+        # Multi-tiered selection hierarchy:
+        # Priority 1: Dedicated UDP game socket
         if udp_candidates:
             return max(set(udp_candidates), key=udp_candidates.count)
-        if tcp_candidates:
-            return max(set(tcp_candidates), key=tcp_candidates.count)
+        # Priority 2: Dedicated game port TCP connection (>1024)
+        if game_port_candidates:
+            return max(set(game_port_candidates), key=game_port_candidates.count)
+        # Priority 3: Cloud match cluster session (GCP/AWS)
+        if cluster_candidates:
+            return max(set(cluster_candidates), key=cluster_candidates.count)
     except Exception as e:
         print("Error getting connections:", e)
         
@@ -207,6 +217,29 @@ def api_detect_ip():
     else:
         return jsonify({"ip": None, "message": "Could not detect game server. Is The Finals running?"})
 
+def resolve_datacenter_name(city, subdiv):
+    # Maps cloud IP ranges to official The Finals game server locations (finals.id/status)
+    # GCP us-central1 (Council Bluffs / Omaha metro) is registered to Kansas City in MaxMind
+    if city == 'Kansas City' or subdiv in ['Missouri', 'Iowa', 'Nebraska']:
+        return "Omaha (US Central)", "Google Cloud"
+    if city in ['North Charleston', 'Charleston'] or subdiv == 'South Carolina':
+        return "Charleston (US East)", "Google Cloud"
+    if city in ['Los Angeles', 'Council Bluffs'] or subdiv == 'California':
+        return "Los Angeles (US West)", "Google Cloud"
+    if city in ['Groningen', 'Eemshaven'] or subdiv == 'Groningen':
+        return "Groningen (EU Central)", "Google Cloud"
+    if city == 'Prague':
+        return "Prague (EU Central)", "The Finals Datacenter"
+    if city == 'Tokyo':
+        return "Tokyo (East Asia)", "Google Cloud"
+    if city == 'Singapore':
+        return "Singapore (East Asia)", "Google Cloud"
+    if city in ['São Paulo', 'Sao Paulo']:
+        return "São Paulo (South America)", "Google Cloud"
+    if city == 'Melbourne':
+        return "Melbourne (Oceania)", "Google Cloud"
+    return None, None
+
 @app.route('/api/geo/<ip>')
 def api_geo(ip):
     try:
@@ -215,9 +248,15 @@ def api_geo(ip):
         reader.close()
         
         if data:
-            city = data.get('city', {}).get('names', {}).get('en', 'Unknown City')
+            raw_city = data.get('city', {}).get('names', {}).get('en', 'Unknown City')
+            subdiv = data.get('subdivisions', [{}])[0].get('names', {}).get('en', '')
             country = data.get('country', {}).get('iso_code', 'Unknown')
-            return jsonify({'status': 'success', 'city': city, 'countryCode': country, 'isp': 'Private Geo-IP'})
+            
+            dc_city, dc_isp = resolve_datacenter_name(raw_city, subdiv)
+            display_city = dc_city if dc_city else raw_city
+            isp = dc_isp if dc_isp else 'The Finals Server'
+            
+            return jsonify({'status': 'success', 'city': display_city, 'countryCode': country, 'isp': isp})
     except Exception as e:
         pass
     return jsonify({'status': 'fail'})
