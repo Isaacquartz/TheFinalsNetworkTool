@@ -31,15 +31,36 @@ stop_ping_event = threading.Event()
 
 import socket
 
+def is_private_ip(ip):
+    if ip.startswith('127.') or ip.startswith('10.') or ip.startswith('192.168.') or ip.startswith('169.254.'):
+        return True
+    if ip.startswith('172.'):
+        try:
+            second_octet = int(ip.split('.')[1])
+            if 16 <= second_octet <= 31:
+                return True
+        except:
+            pass
+    return False
+
+def is_web_port(port):
+    # Web, TLS, HTTP proxies, and local development ports
+    return port in [80, 443, 8080, 8443, 8000, 3000, 5000]
+
 def is_cloudflare(ip):
     try:
         parts = ip.split('.')
-        if len(parts) != 4: return False
-        
-        # Cloudflare ranges commonly used for matchmaking/telemetry APIs
-        if parts[0] == '104' and 16 <= int(parts[1]) <= 31: return True
-        if parts[0] == '162' and parts[1] == '159': return True
-        if parts[0] == '172' and 64 <= int(parts[1]) <= 71: return True
+        if len(parts) < 4: return False
+        p0, p1 = int(parts[0]), int(parts[1])
+        if p0 == 104 and 16 <= p1 <= 31: return True
+        if p0 == 162 and p1 == 159: return True
+        if p0 == 172 and 64 <= p1 <= 71: return True
+        if p0 == 108 and p1 == 162: return True
+        if p0 == 198 and p1 == 41: return True
+        if p0 == 197 and p1 == 234: return True
+        if p0 == 190 and p1 == 93: return True
+        if p0 == 188 and p1 == 114: return True
+        if p0 == 141 and p1 == 101: return True
         return False
     except:
         return False
@@ -60,29 +81,43 @@ def detect_game_ip():
         return None
         
     try:
-        candidates = []
+        udp_candidates = []
+        tcp_candidates = []
+        
         for c in psutil.net_connections(kind='inet'):
             if c.pid in game_pids and c.raddr:
                 ip = c.raddr.ip
                 port = c.raddr.port
                 
-                if ip.startswith('127.') or ip.startswith('192.168.') or ip.startswith('10.'):
+                # Exclude local/private loopback
+                if is_private_ip(ip):
                     continue
                     
-                if port in [80, 443] and is_cloudflare(ip):
+                # Exclude Cloudflare CDN/auth/web APIs
+                if is_cloudflare(ip):
+                    continue
+                
+                # Exclude web, HTTPS, and privileged ports <= 1024
+                # Live game match servers NEVER run on HTTP/HTTPS ports!
+                if is_web_port(port) or port <= 1024:
                     continue
                         
-                if c.type == socket.SOCK_DGRAM or c.status == 'ESTABLISHED':
-                    candidates.append(f"{ip}:{port}")
+                if c.type == socket.SOCK_DGRAM:
+                    udp_candidates.append(f"{ip}:{port}")
+                elif c.status == 'ESTABLISHED':
+                    tcp_candidates.append(f"{ip}:{port}")
                     
-        if candidates:
-            return max(set(candidates), key=candidates.count)
+        # Always prioritize UDP game server traffic
+        if udp_candidates:
+            return max(set(udp_candidates), key=udp_candidates.count)
+        if tcp_candidates:
+            return max(set(tcp_candidates), key=tcp_candidates.count)
     except Exception as e:
         print("Error getting connections:", e)
         
     return "NOT_IN_MATCH"
 
-def tcp_ping(host, port, timeout=1.0):
+def tcp_ping(host, port, timeout=0.8):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(timeout)
@@ -97,15 +132,13 @@ def tcp_ping(host, port, timeout=1.0):
 def ping_worker(target, interval):
     time_regex = re.compile(r"time[=<](\d+)ms")
     
-    is_tcp = False
     host = target
-    port = 80
+    port = None
     if ':' in target:
         parts = target.split(':')
         host = parts[0]
         try:
             port = int(parts[1])
-            is_tcp = True
         except:
             pass
 
@@ -113,23 +146,16 @@ def ping_worker(target, interval):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         latency = -1
         
-        if is_tcp:
-            # Use TCP Ping to bypass ICMP blocks
+        # Primary: Standard ICMP Ping to the host
+        result = subprocess.run(['ping', '-n', '1', '-w', '1000', host], capture_output=True, text=True)
+        if result.returncode == 0:
+            match = time_regex.search(result.stdout)
+            if match:
+                latency = int(match.group(1))
+        
+        # Fallback: If ICMP is blocked by firewall and a custom port was provided, try TCP ping
+        if latency == -1 and port and port != 443 and port != 80:
             latency = tcp_ping(host, port)
-            # Fallback to ICMP if TCP fails completely (e.g. game disconnected)
-            if latency == -1:
-                result = subprocess.run(['ping', '-n', '1', '-w', '1000', host], capture_output=True, text=True)
-                if result.returncode == 0:
-                    match = time_regex.search(result.stdout)
-                    if match:
-                        latency = int(match.group(1))
-        else:
-            # Use standard ICMP Ping
-            result = subprocess.run(['ping', '-n', '1', '-w', '1000', host], capture_output=True, text=True)
-            if result.returncode == 0:
-                match = time_regex.search(result.stdout)
-                if match:
-                    latency = int(match.group(1))
         
         current_session['pings'].append({
             'timestamp': timestamp,
